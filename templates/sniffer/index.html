@@ -28,12 +28,19 @@
     };
 
     sniffer.onclose = function(e) {
-        alert("Bağlantı koptu")
+        console.log("Bağlantı koptu");
     };
 </script>
-<center>
-    <h3>Packet Sniffer</h3><br/>
-    <button onclick="setKaydir();" id="kaydir_buton">Kaydırma</button><br/>
-    <textarea id="packet-log" cols="100" rows="30"></textarea><br>
-</center>
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+        <textarea id="packet-log" style="width: 100%;" rows="20"></textarea><br>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+        <input type="text" style="width:79%;"/>
+        <button style="width:20%;" onclick="setKaydir();" id="kaydir_buton">Kaydırma</button><br/>
+    </div>
+</div>
+
 {%endblock%}

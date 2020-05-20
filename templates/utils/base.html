@@ -1,11 +1,54 @@
 <!DOCTYPE html>
 <html>
     <head>
+        {% load static %}
+        <meta name="viewport" content="initial-scale=1.0,width=device-width" />
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}" />
+        <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-theme.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-modal/2.2.6/js/bootstrap-modal.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.12.0/d3.min.js"></script>
+        <script type="text/javascript" src="{% static 'js/three.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    
+        {%block script%}{%endblock%}
+        {%block amchart%}
+        
+        <script src="{% static 'js/core.js' %}"></script>
+        <script src="{% static 'js/charts.js' %}"></script>
+        <script src="{% static 'js/themes/animated.js' %}"></script>
+        {%endblock%}
         <title>{%block title%}{%endblock%} | PacketStudio</title>
     </head>
     <body>
-        {%block body%}
-        {%endblock%}
+        <div class="container-fluid">
+            <div class="row" style="background-color: rgb(30,30,30);">
+                <div class="col-lg-12">
+                    <a href="/" ><h1 class="text-center text-info">Packet Studio</h1></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="menu_bt col-lg-3 col-md-3 text-center">
+                    <a href="/"><h4>Ana Sayfa</h4></a>
+                </div>
+                <div class="menu_bt col-lg-3 col-md-3 text-center">
+                    <a href="/sniffer"><h4>Sniffer</h4></a>
+                </div>
+                <div class="menu_bt col-lg-3 col-md-3 text-center">
+                    <a href="#"><h4>Test</h4></a>
+                </div>
+                <div class="menu_bt col-lg-3 col-md-3 text-center">
+                    <a href="#"><h4>Test</h4></a>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+                {%block body%}
+                {%endblock%}
+        </div>
+
     </body>
     
 </html>

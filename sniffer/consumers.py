@@ -9,7 +9,7 @@ class SniffConsumer(WebsocketConsumer):
         self.accept()
 
     def send_packet(self,packet):
-        if UDP in packet:
+        if TCP in packet:
             self.send(text_data=json.dumps({
                 "message":packet.summary()
             }))
