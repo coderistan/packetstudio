@@ -1,0 +1,39 @@
+{%extends 'utils/base.html'%}
+{%block title%}Packet Sniffer{%endblock%}
+
+{%block body%}
+<script>
+    var kaydirma = true;
+    function setKaydir(event){
+        kaydirma = !kaydirma;
+
+        if(kaydirma){
+            document.querySelector("#kaydir_buton").innerHTML = "Kaydırma";
+        }else{
+            document.querySelector("#kaydir_buton").innerHTML = "Kaydır";
+        }
+    }
+    function kaydir(){
+        if(!kaydirma){
+            return;
+        }
+        document.querySelector("#packet-log").scrollTop = document.querySelector("#packet-log").scrollHeight;
+    }
+    const sniffer = new WebSocket('ws://'+ window.location.host+'/sniffer/');
+
+    sniffer.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        document.querySelector('#packet-log').value += (data.message + '\n');
+        kaydir();            
+    };
+
+    sniffer.onclose = function(e) {
+        alert("Bağlantı koptu")
+    };
+</script>
+<center>
+    <h3>Packet Sniffer</h3><br/>
+    <button onclick="setKaydir();" id="kaydir_buton">Kaydırma</button><br/>
+    <textarea id="packet-log" cols="100" rows="30"></textarea><br>
+</center>
+{%endblock%}
