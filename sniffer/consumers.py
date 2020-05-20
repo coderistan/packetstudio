@@ -15,7 +15,7 @@ class SniffConsumer(WebsocketConsumer):
         self.sniffer = AsyncSniffer(prn=self.send_packet)
         self.sniffer.start()        
         self.buffer = []
-        self.max_packet = 15
+        self.max_packet = 20
         self.accept()
         
 
@@ -25,6 +25,7 @@ class SniffConsumer(WebsocketConsumer):
                 "message":self.buffer
             }))
             self.buffer.clear()
+            return
         elif len(self.filter_list):
             for i in self.filter_list:
                 if i in packet:
@@ -32,6 +33,9 @@ class SniffConsumer(WebsocketConsumer):
         else:
             self.buffer.append(packet.summary())
 
+        self.send(text_data = json.dumps(
+            {"info":"{} paket sonra yenilenecek".format(self.max_packet-len(self.buffer))}
+        ))
     def disconnect(self, close_code):
         self.sniffer.stop()
         pass
@@ -43,6 +47,9 @@ class SniffConsumer(WebsocketConsumer):
             message = text_data_json['filtre']
             if(message == "clear"):
                 self.filter_list.clear()
+                self.send(text_data = json.dumps(
+                    {"info":"Filtre temizlendi"}
+                    ))
                 return
 
             f = message.split(",")
@@ -56,6 +63,7 @@ class SniffConsumer(WebsocketConsumer):
                 m += " "+i
                 self.filter_list.append(self.allow.get(i.lower()))
 
+            self.buffer.clear()
             self.send(text_data = json.dumps(
                 {"info":"Filtre eklendi: "+m}
             ))
