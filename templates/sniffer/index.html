@@ -20,17 +20,38 @@
         document.querySelector("#packet-log").scrollTop = document.querySelector("#packet-log").scrollHeight;
     }
     const sniffer = new WebSocket('ws://'+ window.location.host+'/sniffer/');
-
+    
     sniffer.onmessage = function(e) {
         const data = JSON.parse(e.data);
-        document.querySelector('#packet-log').value += (data.message + '\n');
+        const area = document.querySelector('#packet-log');
+        var temp = "";
+        data.message.forEach(element => {
+            temp = temp + element + "\n";
+        });
+        area.value += (temp);
         kaydir();            
     };
 
     sniffer.onclose = function(e) {
         console.log("Bağlantı koptu");
     };
+
+    window.onload = function(e){
+        var filtreleyici = document.getElementById("filtre");
+        filtreleyici.addEventListener("keyup",function(event){
+            if(event.keyCode == 13){
+                sniffer.send(JSON.stringify(
+                    {"filtre":this.value}
+                ));
+            }
+        });
+    }
 </script>
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+        <p>durum çubuğu</p>
+    </div>
+</div>
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
         <textarea id="packet-log" style="width: 100%;" rows="20"></textarea><br>
@@ -38,8 +59,13 @@
 </div>
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
-        <input type="text" style="width:79%;"/>
+        <input id="filtre" type="text" style="width:79%;"/>
         <button style="width:20%;" onclick="setKaydir();" id="kaydir_buton">Kaydırma</button><br/>
+        <p>
+            Eklenebilecek filtreler: tcp,udp,dns,icmp,arp<br/>
+            Filtreler arasına virgül koymalısınız.
+        </p>
+        
     </div>
 </div>
 
