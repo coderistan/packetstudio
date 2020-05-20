@@ -23,6 +23,13 @@
     
     sniffer.onmessage = function(e) {
         const data = JSON.parse(e.data);
+        if(data.info){
+            document.getElementById("bildirim").style.color = "green";
+            document.getElementById("bildirim").innerText = data.info;
+            setTimeout(function(e){
+                document.getElementById("bildirim").style.color = "black";
+            },700);
+        }
         const area = document.querySelector('#packet-log');
         var temp = "";
         data.message.forEach(element => {
@@ -49,7 +56,7 @@
 </script>
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
-        <p>durum çubuğu</p>
+        <p id="bildirim">durum çubuğu</p>
     </div>
 </div>
 <div class="row">

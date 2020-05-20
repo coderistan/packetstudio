@@ -51,9 +51,14 @@ class SniffConsumer(WebsocketConsumer):
                     return
             
             self.filter_list.clear()
+            m = ""
             for i in f:
-                print("Filtre eklendi: {}".format(i))
+                m += " "+i
                 self.filter_list.append(self.allow.get(i.lower()))
+
+            self.send(text_data = json.dumps(
+                {"info":"Filtre eklendi: "+m}
+            ))
         except Exception as e:
             pass
 #        self.send(text_data=json.dumps({
