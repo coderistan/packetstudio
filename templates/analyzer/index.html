@@ -1,0 +1,19 @@
+{%extends 'utils/base.html'%}
+
+{%load static%}
+
+{%block title%}Pcap Analiz{%endblock%}
+
+{%block body%}
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+    	<form method="POST" enctype='multipart/form-data'>
+    		{% csrf_token %}
+	    	{%if form%}
+	    		{{form.as_p}}
+	        {%endif%}
+	        <button type="submit">Gönder</button>
+    	</form>
+    </div>
+</div>
+{%endblock%}

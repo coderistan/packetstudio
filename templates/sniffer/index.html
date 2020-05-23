@@ -1,5 +1,12 @@
 {%extends 'utils/base.html'%}
 {%block title%}Packet Sniffer{%endblock%}
+<!--
+    Yaplacaklar: 
+
+    - Paket detayı gösterilecek
+    - Paket yakalamayı duraklat/başlat butonu eklenecek
+    - Paketleri PCAP olarak kaydet seçeneği eklenecek
+-->
 
 {%block body%}
 <script>
@@ -24,11 +31,20 @@
     sniffer.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if(data.info){
-            document.getElementById("bildirim").style.color = "green";
-            document.getElementById("bildirim").innerText = data.info;
-            setTimeout(function(e){
-                document.getElementById("bildirim").style.color = "black";
-            },700);
+            if(data.info.toLowerCase().search("filtre")!=-1){
+                // Filtreleme onayı geldi
+                document.getElementById("filtre_mesaj").innerText = data.info;
+                setTimeout(function(e){
+                    document.getElementById("filtre_mesaj").innerText = "Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.";
+                },1000);
+            }else{
+                document.getElementById("bildirim").style.color = "green";
+                document.getElementById("bildirim").innerText = data.info;
+                setTimeout(function(e){
+                    document.getElementById("bildirim").style.color = "black";
+                },700);                
+            }
+
         }
         const area = document.querySelector('#packet-log');
         var temp = "";
@@ -66,9 +82,9 @@
 </div>
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
-        <input id="filtre" type="text" style="width:79%;"/>
+        <input placeholder="Filtre ekleyin..." id="filtre" type="text" style="width:79%;"/>
         <button style="width:20%;" onclick="setKaydir();" id="kaydir_buton">Kaydırma</button><br/>
-        <p>
+        <p id="filtre_mesaj">
             Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.
         </p>
         
