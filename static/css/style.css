@@ -27,3 +27,14 @@
 	text-align: center;
 	padding-top: 20px;
 }
+
+#bar{
+	list-style-type: none;
+	margin: 0px;
+	padding: 0px;
+	width:100%;
+}
+#bar li{
+	display: inline;
+
+}	
