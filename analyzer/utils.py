@@ -23,6 +23,7 @@ class PcapAnalyzer(object):
 	def is_pcap(self):
 		try:
 			self.paketler = rdpcap(self.file_name)
+			self.paketler.stats.append(IPv6)
 			return True
 		except Exception as e:
 			return False
@@ -31,12 +32,14 @@ class PcapAnalyzer(object):
 		t = len(self.paketler.getlayer(TCP))
 		u = len(self.paketler.getlayer(UDP))
 		i = len(self.paketler.getlayer(ICMP))
-
+		v = len(self.paketler.getlayer(IPv6))
+		
 		return {
 			"max":len(self.paketler),
 			"tcp":t,
 			"udp":u,
 			"icmp":i,
+			"ipv6":v,
 			"unk":len(self.paketler) - (t+u+i),
 		}
 
