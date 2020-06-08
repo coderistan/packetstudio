@@ -3,7 +3,6 @@
 <!--
     Yaplacaklar: 
 
-    - Paket detayı gösterilecek
     - Paket yakalamayı duraklat/başlat butonu eklenecek
     - Paketleri PCAP olarak kaydet seçeneği eklenecek
 -->
@@ -11,48 +10,111 @@
 {%block body%}
 <script>
     var kaydirma = true;
+    var pause = false;
+    const sniffer = new WebSocket('ws://'+ window.location.host+'/sniffer/');
+    const filterMessage = "Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.Filtreleri temizlemek için clear komutunu gönderin.";
+
     function setKaydir(event){
         kaydirma = !kaydirma;
 
         if(kaydirma){
-            document.querySelector("#kaydir_buton").innerHTML = "Kaydırma";
+            document.getElementById("kaydir_buton").style.color="rgb(0,138,255)";
+            
         }else{
-            document.querySelector("#kaydir_buton").innerHTML = "Kaydır";
+            document.getElementById("kaydir_buton").style.color="black";
+            
         }
     }
+
     function kaydir(){
         if(!kaydirma){
             return;
         }
         document.querySelector("#packet-log").scrollTop = document.querySelector("#packet-log").scrollHeight;
     }
-    const sniffer = new WebSocket('ws://'+ window.location.host+'/sniffer/');
+
+    function duraklatDevamet(){
+        pause = !pause;
+        if(pause){
+            $("#durDevam>span").removeClass("glyphicon-pause");
+            $("#durDevam>span").addClass("glyphicon-play");
+        }else{
+            $("#durDevam>span").removeClass("glyphicon-play");
+            $("#durDevam>span").addClass("glyphicon-pause");
+        }
+        sniffer.send(JSON.stringify(
+            {
+                "type":"set",
+                "work":"play"
+            } 
+        ));
+    }
+
+    function capKaydet(){
+        // paket kaydetme isteği gönderme
+        if(!pause){
+            alert("Öncelikle paket yakalamayı durdurmalısınız");
+        }else{
+            sniffer.send(JSON.stringify(
+                {
+                    "type":"set",
+                    "work":"save"
+                }
+            ));
+            console.log("Kayıt isteği gönderildi")
+        }
+    }
+
+    function paketDetay(deger){
+        sniffer.send(JSON.stringify(
+            {
+                "type":"info",
+                "index":deger.selectedIndex
+            }
+        )); 
+    }
     
     sniffer.onmessage = function(e) {
         const data = JSON.parse(e.data);
-        if(data.info){
-            if(data.info.toLowerCase().search("filtre")!=-1){
-                // Filtreleme onayı geldi
-                document.getElementById("filtre_mesaj").innerText = data.info;
+        
+            if(data.type=="filtre"){
+                // filtre onayı geldi
+                $("#filtre_mesaj").text(data.info);
                 setTimeout(function(e){
-                    document.getElementById("filtre_mesaj").innerText = "Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.";
+                    document.getElementById("filtre_mesaj").innerText = filterMessage;
                 },1000);
-            }else{
+            }else if(data.type=="notify"){
+                // bildirim geldi
                 document.getElementById("bildirim").style.color = "green";
                 document.getElementById("bildirim").innerText = data.info;
                 setTimeout(function(e){
                     document.getElementById("bildirim").style.color = "black";
-                },700);                
-            }
+                },1000);                
+            }else if(data.type=="packet"){
+                // paketler geldi
+                const area = document.querySelector('#packet-log');
+                
+                if(data.message){
+                    var x = null;
+                    data.message.forEach(element => {
+                        x = document.createElement("option");
+                        x.text = element;
+                        area.add(x);
+                    });
 
-        }
-        const area = document.querySelector('#packet-log');
-        var temp = "";
-        data.message.forEach(element => {
-            temp = temp + element + "\n";
-        });
-        area.value += (temp);
-        kaydir();            
+                    kaydir();  
+                }
+            }
+            else if(data.type=="info"){
+                // paket bilgisi geldi. Burada modal açılacak
+                $("#paketBilgisi").text(data.message);
+                $("#paketDialog").modal();
+            }else if(data.type=="save"){
+                let element = $("#indirmeLink");
+                element.attr("href",window.location+"download/"+data.info);
+                $("#indirmeDialog").modal();
+            }
+                 
     };
 
     sniffer.onclose = function(e) {
@@ -61,34 +123,93 @@
 
     window.onload = function(e){
         var filtreleyici = document.getElementById("filtre");
+        
         filtreleyici.addEventListener("keyup",function(event){
             if(event.keyCode == 13){
                 sniffer.send(JSON.stringify(
-                    {"filtre":this.value}
+                    {
+                        "type":"set",
+                        "work":this.value
+                    }
                 ));
             }
         });
     }
+
 </script>
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
         <p style="font-size: 20px;" id="bildirim">Durum çubuğu</p>
     </div>
 </div>
+
+<!--Paket gösterim ekranı-->
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
-        <textarea id="packet-log" style="width: 100%;" rows="20"></textarea><br>
+        <select onDblClick="paketDetay(this);" id="packet-log" style="border-radius:5px;width: 100%;resize:none;" size="20"></select><br>
     </div>
 </div>
+<!--Paket gösterim ekranı sonu-->
+
+<!--Kontrol alanı-->
 <div class="row">
     <div class="col-md-8 col-md-offset-2">
-        <input placeholder="Filtre ekleyin..." id="filtre" type="text" style="width:79%;"/>
-        <button style="width:20%;" onclick="setKaydir();" id="kaydir_buton">Kaydırma</button><br/>
+        <ul id="bar">
+            <li>
+                <input id="filtre" style="width:80%;height:30px;" type="text" placeholder="Filtreyi giriniz">
+            </li>
+            <li>
+                <button title="Paket izlemeyi duraklat veya devam ettir" id="durDevam" onclick="duraklatDevamet();" style="width:6%;height:30px;"><span class="glyphicon glyphicon-pause"></span></button>
+            </li>
+            <li>
+                <button title="Yakalanan paketleri CAP dosyası olarak kaydet ve indir" id="kaydet" onclick="capKaydet();" style="width:6%;height:30px;"><span class="glyphicon glyphicon-floppy-disk"></span></button>
+            </li>
+            <li>
+               <button title="Scroll kaydırmasına izin ver/verme" style="color:rgb(0,138,255);width:6%;height:30px;"  onclick="setKaydir();" id="kaydir_buton"><span class="glyphicon glyphicon-chevron-down"></span></button>
+            </li>
+        </ul>
         <p id="filtre_mesaj">
-            Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.
+            Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız. Filtreleri
+            temizlemek için clear komutunu gönderin.
         </p>
-        
+    </div>
+</div>
+<!--Kontrol alanı sonu-->
+
+
+<!-- Modal -->
+<div class="modal fade" id="paketDialog" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Paket Bilgisi</h5>
+            </div>
+            <div class="modal-body">
+                <textarea style="width:100%;height:300px;" id="paketBilgisi">
+                    Burada paket bilgisi olacak
+                </textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Download Modal -->
+<div class="modal fade" id="indirmeDialog" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Paket Bilgisi</h5>
+            </div>
+            <div class="modal-body">
+                <a id="indirmeLink" href="#">Dosyayı buradan indir</a>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {%endblock%}
