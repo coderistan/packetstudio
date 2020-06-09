@@ -1,11 +1,5 @@
 {%extends 'utils/base.html'%}
 {%block title%}Packet Sniffer{%endblock%}
-<!--
-    Yaplacaklar: 
-
-    - Paket yakalamayı duraklat/başlat butonu eklenecek
-    - Paketleri PCAP olarak kaydet seçeneği eklenecek
--->
 
 {%block body%}
 <script>
@@ -118,7 +112,7 @@
     };
 
     sniffer.onclose = function(e) {
-        console.log("Bağlantı koptu");
+        $("#bildirim").text("Oturum sona erdi");
     };
 
     window.onload = function(e){
