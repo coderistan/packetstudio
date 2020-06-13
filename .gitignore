@@ -27,7 +27,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 test/
-analyzer/file/*
+analyzer/files/*
 sniffer/download/*
 
 # PyInstaller
