@@ -40,7 +40,7 @@ class PcapAnalyzer(object):
 			"udp":u,
 			"icmp":i,
 			"ipv6":v,
-			"unk":len(self.paketler) - (t+u+i),
+			"unk":len(self.paketler) - (t+u+i+v),
 		}
 
 	def get_ip_data(self):
