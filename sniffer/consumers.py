@@ -116,7 +116,6 @@ class SniffConsumer(WebsocketConsumer):
                         {"type":"save",
                         "info":name}
                     ))
-
                 else:
                     # Filtrenin uygulandığı mesajı gönderiliyor
                     f = message["work"].split(",")
