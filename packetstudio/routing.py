@@ -1,13 +1,13 @@
 # mysite/routing.py
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
-import sniffer.routing
+from sniffer import consumers
+from django.conf.urls import url
 
 application = ProtocolTypeRouter({
-    # (http->django views is added by default)
     'websocket': AuthMiddlewareStack(
-        URLRouter(
-            sniffer.routing.sniffer_urlpatterns,
-        )
+        URLRouter([
+            url(r"^sniffer/$",consumers.SniffConsumer),
+        ])
     ),
 })
