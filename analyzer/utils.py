@@ -1,4 +1,5 @@
 from scapy.all import *
+import os
 
 class Oturum(object):
 	def __init__(self,oturum_adi,paket_listesi):
@@ -23,6 +24,7 @@ class PcapAnalyzer(object):
 	def is_pcap(self):
 		try:
 			self.paketler = rdpcap(self.file_name)
+			os.remove(self.file_name)
 			self.paketler.stats.append(IPv6)
 			return True
 		except Exception as e:
