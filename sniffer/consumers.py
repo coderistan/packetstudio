@@ -110,6 +110,8 @@ class SniffConsumer(WebsocketConsumer):
                     # kaydetme işlemi
                     result = self.sniffer.stop()
                     name = hashlib.md5(result[0].show(dump=True).encode("utf-8")).hexdigest()+".cap"
+                    if(not os.path.exists(os.path.join(st.BASE_DIR,"sniffer","download"))):
+                        os.mkdir(os.path.join(st.BASE_DIR,"sniffer","download"))
                     path = os.path.join(st.BASE_DIR,"sniffer","download",name)
                     wrpcap(path,result)
                     self.send(text_data=json.dumps(

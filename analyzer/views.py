@@ -5,9 +5,13 @@ from packetstudio import settings
 import hashlib
 from scapy.all import *
 from .utils import PcapAnalyzer
+import os
 
 def get_path(file_name):
+	if(not os.path.exists(settings.BASE_DIR+os.path.sep+"analyzer"+os.path.sep+"files")):
+		os.mkdir(settings.BASE_DIR+os.path.sep+"analyzer"+os.path.sep+"files")
 	return settings.BASE_DIR+os.path.sep+"analyzer"+os.path.sep+"files"+os.path.sep+file_name+".cap"
+
 def get_file(file_name):
 	return open(get_path(file_name))
 
