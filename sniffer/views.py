@@ -13,7 +13,6 @@ def download(request,dosya_adi):
 		response['Content-Type'] = 'application/cap'
 		response['Content-Disposition'] = 'attachment; filename={}'.format(dosya_adi)
 		os.remove(dizin)
-		print("Silindi: {}".format(dizin))
 		return response
 	else:
 		return redirect("/sniffer")
