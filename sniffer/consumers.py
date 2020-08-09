@@ -94,7 +94,7 @@ class SniffConsumer(WebsocketConsumer):
                     try:
                         veri = int(message["work"].split(":")[1])
                         if(veri<=0):
-                            raise Exception("ULAN")
+                            raise Exception("Hatalı bildirim")
                         self.max_packet = veri
                         self.send_packet(self.paketler[0])
                         self.send(text_data=json.dumps({
