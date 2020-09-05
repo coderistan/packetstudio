@@ -67,7 +67,6 @@ class SniffConsumer(WebsocketConsumer):
 
         fark = temp - self.zaman
         if(fark >= 1):
-            print("Saniyedeki paket sayısı:",self.sayac/fark)
             self.max_packet = max(int(self.sayac / fark),1)
             self.sayac = 0
             self.zaman = temp
