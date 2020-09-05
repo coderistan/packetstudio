@@ -35,14 +35,14 @@ class SniffConsumer(WebsocketConsumer):
         self.sniffer.start()        
         self.buffer = []
         self.max_packet = 50
+        self.temp = 0
         self.accept()
-        
+
 
     def send_packet(self,packet):
         if(self.pause):
             return
 
-        
         if len(self.buffer) >= self.max_packet:
             # paketler gönderiliyor
             self.send(text_data=json.dumps({
@@ -62,10 +62,15 @@ class SniffConsumer(WebsocketConsumer):
             self.buffer.append(packet.summary())
             self.paketler.append(packet)
 
-        # Kalan paket bildirimi gönderiliyor
-        self.send(text_data = json.dumps(
-            {"type":"notify","info":"{} paket sonra yenilenecek".format(self.max_packet-len(self.buffer))}
-        ))
+        remain = self.max_packet - len(self.buffer)
+        if(remain == self.temp):
+            return
+        else:
+            self.temp = remain
+            # Kalan paket bildirimi gönderiliyor
+            self.send(text_data = json.dumps(
+                {"type":"notify","info":"{} paket sonra yenilenecek".format(remain)}
+            ))
     def disconnect(self, close_code):
         self.sniffer.stop()
         pass
