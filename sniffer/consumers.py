@@ -4,6 +4,7 @@ import json
 import hashlib
 import os
 from packetstudio import settings as st
+import time
 
 """
 Gönderilen Mesaj Tipleri:
@@ -36,6 +37,8 @@ class SniffConsumer(WebsocketConsumer):
         self.buffer = []
         self.max_packet = 50
         self.temp = 0
+        self.zaman = 0
+        self.sayac = 0
         self.accept()
 
 
@@ -49,28 +52,30 @@ class SniffConsumer(WebsocketConsumer):
                 "type":"packet",
                 "message":self.buffer
             }))
-
             self.buffer.clear()
             return
 
         elif len(self.filter_list):
             for i in self.filter_list:
                 if i in packet:
-                    self.buffer.append(packet.summary())
-                    self.paketler.append(packet)
+                    self.add_buffer(packet)
         else:
-            self.buffer.append(packet.summary())
-            self.paketler.append(packet)
+            self.add_buffer(packet)
 
-        remain = self.max_packet - len(self.buffer)
-        if(remain == self.temp):
-            return
-        else:
-            self.temp = remain
-            # Kalan paket bildirimi gönderiliyor
-            self.send(text_data = json.dumps(
-                {"type":"notify","info":"{} paket sonra yenilenecek".format(remain)}
-            ))
+    def add_buffer(self,packet):
+        temp = time.time()
+
+        fark = temp - self.zaman
+        if(fark >= 1):
+            print("Saniyedeki paket sayısı:",self.sayac/fark)
+            self.max_packet = max(int(self.sayac / fark),1)
+            self.sayac = 0
+            self.zaman = temp
+
+        self.sayac += 1
+        self.paketler.append(packet)
+        self.buffer.append(packet.summary())
+
     def disconnect(self, close_code):
         self.sniffer.stop()
         pass
@@ -91,6 +96,7 @@ class SniffConsumer(WebsocketConsumer):
                 elif(message["work"] == "play"):
                     # Paket yakalayıcıyı duraklat/devam ettir
                     self.pause = not self.pause
+
                     self.send(text_data=json.dumps({
                         "type":"notify",
                         "info":"Paket yakalama {}".format("durduruldu" if self.pause else "devam ediyor")

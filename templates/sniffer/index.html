@@ -7,6 +7,7 @@
     var pause = false;
     const sniffer = new WebSocket('ws://'+ window.location.host+'/sniffer/');
     const filterMessage = "Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.Filtreleri temizlemek için clear komutunu gönderin.";
+    var area = null;
 
     function setKaydir(event){
         kaydirma = !kaydirma;
@@ -67,6 +68,11 @@
             }
         )); 
     }
+
+    function bildiri(mesaj){
+        // bildirim geldi
+        document.getElementById("bildirim").innerText = mesaj;
+    }
     
     sniffer.onmessage = function(e) {
         const data = JSON.parse(e.data);
@@ -78,24 +84,18 @@
                     document.getElementById("filtre_mesaj").innerText = filterMessage;
                 },1000);
             }else if(data.type=="notify"){
-                // bildirim geldi
-                document.getElementById("bildirim").style.color = "green";
-                document.getElementById("bildirim").innerText = data.info;
-                setTimeout(function(e){
-                    document.getElementById("bildirim").style.color = "black";
-                },1000);                
+                bildiri(data.info)
             }else if(data.type=="packet"){
                 // paketler geldi
-                const area = document.querySelector('#packet-log');
                 
                 if(data.message){
                     var x = null;
-                    data.message.forEach(element => {
+                    for(var i=0;i<data.message.length;i++){
                         x = document.createElement("option");
-                        x.text = element;
+                        x.text = data.message[i];
                         area.add(x);
-                    });
-
+                    }
+                    bildiri("Paket sayısı: "+area.length);
                     kaydir();  
                 }
             }
@@ -117,7 +117,7 @@
 
     window.onload = function(e){
         var filtreleyici = document.getElementById("filtre");
-        
+        area = document.querySelector('#packet-log');
         filtreleyici.addEventListener("keyup",function(event){
             if(event.keyCode == 13){
                 sniffer.send(JSON.stringify(
