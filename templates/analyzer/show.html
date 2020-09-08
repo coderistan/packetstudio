@@ -5,7 +5,7 @@
 
 {%block body%}
 <div class="row">
-	<div class="col-md-8 col-md-offset-2">
+	<div class="col-md-8 offset-md-2">
 
 		<!-- Resources -->
 		<script src="https://www.amcharts.com/lib/4/core.js"></script>
@@ -16,10 +16,10 @@
 		<script>
 		$(document).ready(function(e) {
 			$(".acilir").click(function(){
-				if($(this).find("span").attr("class").indexOf("glyphicon-chevron-down")==-1){
-					$(this).find("span").attr("class","glyphicon glyphicon-chevron-down text-right");
+				if($(this).find("i").attr("class").indexOf("fa-angle-down")==-1){
+					$(this).find("i").attr("class","fas fa-angle-down text-right");
 				}else{
-					$(this).find("span").attr("class","glyphicon glyphicon-chevron-up text-right");
+					$(this).find("i").attr("class","fas fa-angle-up text-right");
 				}
 				$(this).next(".aciklama").toggle(500);
 			})
@@ -86,14 +86,14 @@
 		<!-- HTML -->
 		<h3>Pcap Dosyası Verileri</h4>
 		<br/>
-		<h4>Protokol Bazında Paket Dağılımı <span title="PCAP dosyasındaki paketlerin çoğunluk olarak hangi protokoller üzerinde oluşturulduğunu gösterir" class="glyphicon glyphicon-question-sign"></span></h4>
+		<h4>Protokol Bazında Paket Dağılımı <i title="PCAP dosyasındaki paketlerin çoğunluk olarak hangi protokoller üzerinde oluşturulduğunu gösterir" class="fas fa-question-circle"></i></h4>
 		<div style="width:100%;height: 400px;" id="chartdiv">
 			
 		</div>
-		<h4>Oturumlar <span title="İki nokta arasındaki iletişimi tek bir başlık altında gösterir. A > B ve B > A şeklinde iki nokta arasındaki iletişimin detaylarını görebilirsiniz." class="glyphicon glyphicon-question-sign"></span></h4>
+		<h4>Oturumlar <i title="İki nokta arasındaki iletişimi tek bir başlık altında gösterir. A > B ve B > A şeklinde iki nokta arasındaki iletişimin detaylarını görebilirsiniz." class="fas fa-question-circle"></i></h4>
 		{%for i in sessions%}
 			<div class="acilir">
-				<span class="glyphicon glyphicon-chevron-down text-right"></span> {{i.first}} ile {{i.second}} arasındaki iletişim 
+				<i class="fas fa-angle-down text-right"></i> {{i.first}} ile {{i.second}} arasındaki iletişim
 			</div> <!--Burada düzgün bir başlık yapılacak-->
 			<div class="aciklama">
 				{%for k in i.ip_listesi%}
