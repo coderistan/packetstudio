@@ -1,0 +1,24 @@
+{% extends 'utils/base.html' %}
+{% block title %}Yardım{% endblock %}
+
+{% block body %}
+<div class="row">
+	<div class="col-md-8 offset-md-2">
+		<h2 class="text-info">Yardım sayfası</h2>
+		<h6>
+			<b>Sniffer</b>
+			<p>
+				Yerel ağınızdaki paketleri dinleyebileceğiniz web arayüzü sayfası. Paketlerin filtrelenmesi için BPF(Berkeley Packet Filter) syntax'ı kullanılmaktadır. Bilgi almak için <a href="https://biot.com/capstats/bpf.html" target="_blank">BPF Syntax</a><br/><br/>
+				Örneğin aşağıdaki filtre ifadesi, IP adres kaynağı 192.168.1.35 olan paketleri ifade eder.<br/>
+				<code>ip src 192.168.1.35</code> 
+				<br/><br/>
+				Paketlerin detayını görmek için, ilgili pakete çift tıklamanız yeterlidir. Sağ taraftaki panelde paketin detayları gösterilecektir.
+			</p>
+			<b>Analyzer</b>
+			<p>
+				Sniffer tarafından yakalanan paketlerin sayısal bilgi olarak chart grafik üzerinde gösterildiği web arayüzü. Aynı zamanda iki adres arasındaki birebir iletişimin detayları da görülebilir.
+			</p>
+		</h6>
+	</div>
+</div>
+{% endblock %}

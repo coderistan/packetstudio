@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     path('sniffer/',include('sniffer.urls')),
     path('analyzer/',include('analyzer.urls')),
+    path('help/',views.help),
     path('admin/', admin.site.urls),
     path('',views.index,name="index"),
 ]
