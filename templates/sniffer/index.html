@@ -23,8 +23,7 @@
             </div>
         </div>
         <p id="filtre_mesaj">
-            Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız. Filtreleri
-            temizlemek için clear komutunu gönderin.
+            Geçerli filtre: <code>yok</code>
         </p>
     </div>
     <div class="col-md-4">
@@ -56,7 +55,7 @@
     var kaydirma = true;
     var pause = false;
     const sniffer = new WebSocket('ws://'+ window.location.host+'/sniffer/');
-    const filterMessage = "Eklenebilecek filtreler: tcp,udp,dns,icmp,arp. Filtreler arasına virgül koymalısınız.Filtreleri temizlemek için clear komutunu gönderin.";
+    var current_filter = null;
     var area = null;
 
     function setKaydir(event){
@@ -90,7 +89,7 @@
         sniffer.send(JSON.stringify(
             {
                 "type":"set",
-                "work":"play"
+                "data":"play"
             }
         ));
     }
@@ -103,7 +102,7 @@
             sniffer.send(JSON.stringify(
                 {
                     "type":"set",
-                    "work":"save"
+                    "data":"save"
                 }
             ));
             console.log("Kayıt isteği gönderildi")
@@ -127,11 +126,18 @@
     sniffer.onmessage = function(e) {
         const data = JSON.parse(e.data);
 
-            if(data.type=="filtre"){
+            if(data.type=="filter"){
                 // filtre onayı geldi
                 $("#filtre_mesaj").text(data.info);
+                
+                if(data.value){
+                    current_filter = data.value;
+                }else{
+                    current_filter = null;
+                }
+
                 setTimeout(function(e){
-                    document.getElementById("filtre_mesaj").innerText = filterMessage;
+                    document.getElementById("filtre_mesaj").innerHTML = "Geçerli filtre: <code>"+(current_filter==null?"yok":current_filter)+"</code>";
                 },1000);
             }else if(data.type=="notify"){
                 bildiri(data.info)
@@ -175,7 +181,7 @@
                 sniffer.send(JSON.stringify(
                     {
                         "type":"set",
-                        "work":this.value
+                        "data":this.value
                     }
                 ));
             }

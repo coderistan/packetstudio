@@ -21,17 +21,9 @@ Gelen Mesaj Tipleri:
 
 class SniffConsumer(WebsocketConsumer):
     def connect(self):
-        self.filter_list = []
+        self.filter = None
         self.paketler = []
         self.pause = False
-
-        self.allow = {
-            "tcp":TCP,
-            "arp":ARP,
-            "udp":UDP,
-            "icmp":ICMP,
-            "dns":DNS,
-        }
         self.sniffer = AsyncSniffer(prn=self.send_packet)
         self.sniffer.start()        
         self.buffer = []
@@ -55,10 +47,6 @@ class SniffConsumer(WebsocketConsumer):
             self.buffer.clear()
             return
 
-        elif len(self.filter_list):
-            for i in self.filter_list:
-                if i in packet:
-                    self.add_buffer(packet)
         else:
             self.add_buffer(packet)
 
@@ -77,22 +65,44 @@ class SniffConsumer(WebsocketConsumer):
 
     def disconnect(self, close_code):
         self.sniffer.stop()
-        pass
+
+    def check_filter(self,_filter):
+        try:
+            test_sniffer = sniff(filter=_filter,count=1,timeout=0.01)
+            return True
+        except scapy.error.Scapy_Exception:
+            return False
+
+    def reload_sniffer(self,_filter=None):
+        if self.sniffer.running:
+            self.sniffer.stop()
+
+        self.sniffer = AsyncSniffer(filter=_filter,prn=self.send_packet)
+        self.sniffer.start()
+        self.filter = _filter
+        self.buffer.clear()
 
     # mesaj alınırsa
     def receive(self, text_data):
         try:
             message = json.loads(text_data)
             _type = message['type']
-            if(_type == "set"):
-                # ayarlama işlemleri
 
-                if(message["work"] == "clear"):
-                    # Listenin temizlendiği bildirimi gönderiliyor
-                    self.filter_list.clear()
-                    self.send(text_data = json.dumps({"type":"filtre","info":"Filtre temizlendi"}))
-                    return
-                elif(message["work"] == "play"):
+            # ayarlama işlemleri
+            if(_type == "set"):
+                
+                # temizleme
+                if message["data"] == "clear": 
+                    if self.filter == None:
+                        result = "Uygulanmış bir filtre yok"
+                    else:
+                        self.reload_sniffer()
+                        result = "Filtre temizlendi"
+
+                    self.send(text_data = json.dumps({"type":"filter","info":result}))
+
+                # duraklatma/devam etme
+                elif message["data"] == "play":
                     # Paket yakalayıcıyı duraklat/devam ettir
                     self.pause = not self.pause
 
@@ -100,24 +110,11 @@ class SniffConsumer(WebsocketConsumer):
                         "type":"notify",
                         "info":"Paket yakalama {}".format("durduruldu" if self.pause else "devam ediyor")
                     }))
-                elif("speed" in message["work"]):
-                    try:
-                        veri = int(message["work"].split(":")[1])
-                        if(veri<=0):
-                            raise Exception("Hatalı bildirim")
-                        self.max_packet = veri
-                        self.send_packet(self.paketler[0])
-                        self.send(text_data=json.dumps({
-                            "type":"filtre",
-                            "info":"Yenileme hızı: {}".format(self.max_packet)
-                        }))
-                    except Exception as e:
-                        self.send(text_data=json.dumps({
-                            "type":"filtre",
-                            "info":"Hatalı bildirim"
-                        }))      
-                elif(message["work"] == "save"):
+                           
+                # paketleri kaydetme
+                elif message["data"] == "save":
                     # kaydetme işlemi
+                    # kullanıcı özelinde kayıt işlemi
                     result = self.sniffer.stop()
                     name = hashlib.md5(result[0].show(dump=True).encode("utf-8")).hexdigest()+".cap"
                     if(not os.path.exists(os.path.join(st.BASE_DIR,"sniffer","download"))):
@@ -128,33 +125,39 @@ class SniffConsumer(WebsocketConsumer):
                         {"type":"save",
                         "info":name}
                     ))
-                else:
-                    # Filtrenin uygulandığı mesajı gönderiliyor
-                    f = message["work"].split(",")
-                    for i in f:
-                        if i.lower() not in self.allow:
-                            return
-                    
-                    self.filter_list.clear()
-                    m = ""
-                    for i in f:
-                        m += " "+i
-                        self.filter_list.append(self.allow.get(i.lower()))
 
-                    self.buffer.clear()
+                # filtre uygulama
+                else:
+                    filter_string = message["data"]
+                    
+                    # eğer bir önceki filtre ile aynı filtre uygulanacaksa pas geçilir
+                    if filter_string.strip() == self.filter:
+                        print("Aynı filtre. Pas geçiliyor: ",filter_string)
+                        return
+
+                    if self.check_filter(filter_string):
+                        self.reload_sniffer(filter_string)
+                        result = "Filtre uygulandı: "+filter_string
+                        
+                    else:
+                        filter_string = None
+                        result = "Hatalı filtre. Girdinizi tekrar kontrol edin"
+
                     self.send(text_data = json.dumps(
-                        {"type":"filtre",
-                        "info":"Filtre eklendi: "+m}
+                        {"type":"filter","info":result,"value":filter_string}
                     ))
 
-            elif(_type == "info"):
-                # paket bilgi alma işlemleri
+            # paket hakkında bilgi alma
+            elif _type == "info":
+                
+                # toplanan 
                 self.send(text_data = json.dumps(
                     {"type":"info",
                     "message":self.paketler[message["index"]].show(dump=True)}
                 ))
+
         except Exception as e:
-            print(e)
+            self.reload_sniffer(self.filter)
 
     def sendWrap(self,data):
         self.send(text_data=json.dumps(
