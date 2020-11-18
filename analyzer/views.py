@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from .forms import UploadFileForm
 from packetstudio import settings
 import hashlib
@@ -16,6 +17,7 @@ def get_file(file_name):
 	return open(get_path(file_name))
 
 # Create your views here.
+@login_required(login_url=settings.LOGIN_URL)
 def index(request):
 	if(request.method == "POST"):
 		print(request.FILES)
@@ -46,6 +48,7 @@ def upload_file(f):
 		print("Hata: {}".format(str(e)))
 		return False
 
+@login_required(login_url=settings.LOGIN_URL)
 def show(request):
     # Burada analizi yapılan bir PCAP dosyasının
     # sonuçları gösterilecek.

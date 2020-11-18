@@ -1,0 +1,25 @@
+{% extends 'utils/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="login_form">
+        <form action="/loginmanager/login/" method="POST" class="form">
+            {% csrf_token %}
+            Kullanıcı adı: <input name="username" type="text" class="w-100"/>
+            Şifre:  <input name="password" type="password" class="w-100"/>
+            <input type="submit" class="btn btn-primary" style="padding:5px;margin-top:10px;" value="Giriş Yap"/>
+            <input type="hidden" name="redirect" id="redirect"/>
+        </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+window.onload = function(){
+    let link = new URL(window.location);
+    document.getElementById("redirect").value = link.searchParams.get("next");
+}
+</script>
+{% endblock %}

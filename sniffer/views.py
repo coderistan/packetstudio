@@ -1,11 +1,14 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
-from packetstudio import settings as st
+from django.contrib.auth.decorators import login_required
+from packetstudio import settings
 import os
 
+@login_required(login_url=settings.LOGIN_URL)
 def index(request):
     return render(request,'sniffer/index.html')
 
+@login_required(login_url=settings.LOGIN_URL)
 def download(request,dosya_adi):
 	dizin = os.path.join(st.BASE_DIR,"sniffer","download",dosya_adi)
 	if(os.path.exists(dizin)):	

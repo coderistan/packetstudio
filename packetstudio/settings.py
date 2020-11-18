@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+LOGIN_URL = "/loginmanager/login"
+LOGOUT_URL = "/loginmanager/logout"
 
 # Application definition
 
@@ -34,6 +36,7 @@ INSTALLED_APPS = [
     'channels',
     'analyzer',
     'sniffer',
+    'login_manager',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

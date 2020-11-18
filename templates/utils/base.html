@@ -36,6 +36,19 @@
               </li>
             </ul>
           </div>
+          {% if user.is_authenticated %}
+          <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+              <ul class="navbar-nav ml-auto">
+                  <li class="nav-item">
+                      <span class="navbar-text text-info">
+                          Merhaba, {{user.username}}!
+                        </span>
+                  </li>
+                  <li class="nav-item">
+                      <a class="nav-link" href="/loginmanager/logout">Çıkış Yap</a>
+                  </li>
+          </div>
+          {% endif %}
         </nav>
 
         <div class="container-fluid">
