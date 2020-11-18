@@ -18,8 +18,12 @@
 </div>
 <script type="text/javascript">
 window.onload = function(){
-    let link = new URL(window.location);
-    document.getElementById("redirect").value = link.searchParams.get("next");
+    {% if path %}
+        document.getElementById("redirect").value = "{{ path }}";
+    {% else %}
+        let link = new URL(window.location);
+        document.getElementById("redirect").value = link.searchParams.get("next");
+    {% endif %}
 }
 </script>
 {% endblock %}

@@ -11,6 +11,7 @@ def index(request):
 
     if request.method == "POST":
         path = request.POST.get("redirect")
+        path = path if path else "/"
 
         login_form = AuthenticationForm(request,data=request.POST)
         if login_form.is_valid():
@@ -18,7 +19,7 @@ def index(request):
             print("PATH",path)
             return redirect(path)
         else:
-            return render(request,"login_manager/index.html",{})
+            return render(request,"login_manager/index.html",{"path":path})
         
     else:
         return render(request,"login_manager/index.html",{})
