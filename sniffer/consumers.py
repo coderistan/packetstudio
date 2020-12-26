@@ -3,7 +3,7 @@ from scapy.all import *
 import json
 import hashlib
 import os
-from packetstudio import settings as st
+from packetstudio import settings
 import time
 
 """
@@ -18,6 +18,11 @@ Gelen Mesaj Tipleri:
 - info: Bir bilgi almak isteyen mesajdır(paket hakkında)
 
 """
+class Message:
+    def __init__(self,data):
+        self.type = data["type"]
+        self.do = data["do"]
+        self.data = data.get("data",None)
 
 class SniffConsumer(WebsocketConsumer):
     def connect(self):
@@ -31,6 +36,7 @@ class SniffConsumer(WebsocketConsumer):
         self.temp = 0
         self.zaman = 0
         self.sayac = 0
+        self.message = None
         self.accept()
 
 
@@ -64,7 +70,8 @@ class SniffConsumer(WebsocketConsumer):
         self.buffer.append(packet.summary())
 
     def disconnect(self, close_code):
-        self.sniffer.stop()
+        if self.sniffer.running:
+            self.sniffer.stop()
 
     def check_filter(self,_filter):
         try:
@@ -77,87 +84,113 @@ class SniffConsumer(WebsocketConsumer):
         if self.sniffer.running:
             self.sniffer.stop()
 
-        self.sniffer = AsyncSniffer(filter=_filter,prn=self.send_packet)
+        self.sniffer = AsyncSniffer(filter=self.filter,prn=self.send_packet)
         self.sniffer.start()
-        self.filter = _filter
         self.buffer.clear()
+
+    def clear_filters(self):
+        if self.filter == None:
+            result = "Uygulanmış bir filtre yok"
+        else:
+            self.reload_sniffer()
+            result = "Filtre temizlendi"
+
+        return {"type":"filter","info":result}
+
+    def play_or_pause(self):
+        # Paket yakalayıcıyı duraklat/devam ettir
+        self.pause = not self.pause
+        return {
+            "type":"notify",
+            "info":"Paket yakalama {}"\
+                .format("durduruldu" if self.pause else "devam ediyor")
+            }
+
+    def save_packets(self):
+        # kaydetme işlemi
+        # kullanıcı özelinde kayıt işlemi
+        try:
+            result = self.sniffer.stop()
+            name = hashlib.md5(result[0]\
+                .show(dump=True)\
+                .encode("utf-8"))\
+                .hexdigest()+".cap"
+            
+            if(not os.path.exists(os.path.join(settings.BASE_DIR,"sniffer","download"))):
+                os.mkdir(os.path.join(settings.BASE_DIR,"sniffer","download"))
+            
+            path = os.path.join(settings.BASE_DIR,"sniffer","download",name)
+            wrpcap(path,result)
+
+            result = name
+        except Exception as e:
+            # TODO: doğru hata yakalaması yapılmalı
+            result = None
+
+        # TODO: paket kaydedilmesi hatalı olursa?
+        return {"type":"save","info":result}
+
+    def do_filter(self):
+        filter_string = self.message.data
+        
+        # eğer bir önceki filtre ile aynı filtre uygulanacaksa pas geçilir
+        if filter_string.strip() == self.filter:
+            # TODO: Pas geçme işlemi kullanıcıya bildirilmeli
+            print("Aynı filtre. Pas geçiliyor: ",filter_string)
+            return
+
+        if self.check_filter(filter_string):
+            self.filter = filter_string
+            self.reload_sniffer()
+            result = "Filtre uygulandı: "+filter_string
+            
+        else:
+            filter_string = None
+            result = "Hatalı filtre. Girdinizi tekrar kontrol edin"
+
+        return {"type":"filter","info":result,"value":filter_string}
+
+    def get_packet_info(self):
+        result = self.paketler[self.message.data].show(dump=True)
+        return {"type":"info","message":result}
+
+    def invalid(self):
+        # geçersiz işlemler için
+        return {"type":"notify","info":"Geçersiz bir işlem"}
+
+    def get_work(self):
+        # TODO: else: pass durumları düzenlenmeli
+
+        if self.message.type == "set":
+            if self.message.do == "clear":
+                return self.clear_filters
+            elif self.message.do == "play":
+                return self.play_or_pause
+            elif self.message.do == "save":
+                return self.save_packets
+            elif self.message.do == "filter":
+                return self.do_filter
+
+        elif self.message.type == "info":
+            if self.message.do == "packet_info":
+                return self.get_packet_info
+        
+        return self.invalid
+
 
     # mesaj alınırsa
     def receive(self, text_data):
-        try:
-            message = json.loads(text_data)
-            _type = message['type']
+        data = json.loads(text_data)
+        self.message = Message(data)
 
-            # ayarlama işlemleri
-            if(_type == "set"):
-                
-                # temizleme
-                if message["data"] == "clear": 
-                    if self.filter == None:
-                        result = "Uygulanmış bir filtre yok"
-                    else:
-                        self.reload_sniffer()
-                        result = "Filtre temizlendi"
+        # mesaj tipine göre yapılacak iş
+        work = self.get_work()
 
-                    self.send(text_data = json.dumps({"type":"filter","info":result}))
-
-                # duraklatma/devam etme
-                elif message["data"] == "play":
-                    # Paket yakalayıcıyı duraklat/devam ettir
-                    self.pause = not self.pause
-
-                    self.send(text_data=json.dumps({
-                        "type":"notify",
-                        "info":"Paket yakalama {}".format("durduruldu" if self.pause else "devam ediyor")
-                    }))
-                           
-                # paketleri kaydetme
-                elif message["data"] == "save":
-                    # kaydetme işlemi
-                    # kullanıcı özelinde kayıt işlemi
-                    result = self.sniffer.stop()
-                    name = hashlib.md5(result[0].show(dump=True).encode("utf-8")).hexdigest()+".cap"
-                    if(not os.path.exists(os.path.join(st.BASE_DIR,"sniffer","download"))):
-                        os.mkdir(os.path.join(st.BASE_DIR,"sniffer","download"))
-                    path = os.path.join(st.BASE_DIR,"sniffer","download",name)
-                    wrpcap(path,result)
-                    self.send(text_data=json.dumps(
-                        {"type":"save",
-                        "info":name}
-                    ))
-
-                # filtre uygulama
-                else:
-                    filter_string = message["data"]
-                    
-                    # eğer bir önceki filtre ile aynı filtre uygulanacaksa pas geçilir
-                    if filter_string.strip() == self.filter:
-                        print("Aynı filtre. Pas geçiliyor: ",filter_string)
-                        return
-
-                    if self.check_filter(filter_string):
-                        self.reload_sniffer(filter_string)
-                        result = "Filtre uygulandı: "+filter_string
-                        
-                    else:
-                        filter_string = None
-                        result = "Hatalı filtre. Girdinizi tekrar kontrol edin"
-
-                    self.send(text_data = json.dumps(
-                        {"type":"filter","info":result,"value":filter_string}
-                    ))
-
-            # paket hakkında bilgi alma
-            elif _type == "info":
-                
-                # toplanan 
-                self.send(text_data = json.dumps(
-                    {"type":"info",
-                    "message":self.paketler[message["index"]].show(dump=True)}
-                ))
-
-        except Exception as e:
-            self.reload_sniffer(self.filter)
+        # işi gerçekleştirme
+        result = work()
+        
+        # sonuçları gönderme
+        self.sendWrap(result)
 
     def sendWrap(self,data):
         self.send(text_data=json.dumps(

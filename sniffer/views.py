@@ -10,7 +10,7 @@ def index(request):
 
 @login_required(login_url=settings.LOGIN_URL)
 def download(request,dosya_adi):
-	dizin = os.path.join(st.BASE_DIR,"sniffer","download",dosya_adi)
+	dizin = os.path.join(settings.BASE_DIR,"sniffer","download",dosya_adi)
 	if(os.path.exists(dizin)):	
 		response = HttpResponse(open(dizin,'rb').read())
 		response['Content-Type'] = 'application/cap'

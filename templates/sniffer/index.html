@@ -89,7 +89,7 @@
         sniffer.send(JSON.stringify(
             {
                 "type":"set",
-                "data":"play"
+                "do":"play"
             }
         ));
     }
@@ -102,7 +102,7 @@
             sniffer.send(JSON.stringify(
                 {
                     "type":"set",
-                    "data":"save"
+                    "do":"save"
                 }
             ));
             console.log("Kayıt isteği gönderildi")
@@ -113,7 +113,8 @@
         sniffer.send(JSON.stringify(
             {
                 "type":"info",
-                "index":deger.selectedIndex
+                "do":"packet_info",
+                "data":deger.selectedIndex,
             }
         ));
     }
@@ -181,7 +182,8 @@
                 sniffer.send(JSON.stringify(
                     {
                         "type":"set",
-                        "data":this.value
+                        "do":"filter",
+                        "data":this.value,
                     }
                 ));
             }
