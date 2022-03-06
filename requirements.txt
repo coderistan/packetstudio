@@ -1,3 +1,4 @@
 django==3.2.12
 channels==3.0.4
 scapy==2.4.3
+python-dotenv==0.19.2
