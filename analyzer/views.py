@@ -20,7 +20,6 @@ def get_file(file_name):
 @login_required(login_url=settings.LOGIN_URL)
 def index(request):
 	if(request.method == "POST"):
-		print(request.FILES)
 		# dosyayı yükle
 		result = upload_file(request.FILES.get("file",None))
 		if(result):
@@ -45,7 +44,6 @@ def upload_file(f):
 				destination.write(chunk)
 		return temp
 	except Exception as e:
-		print("Hata: {}".format(str(e)))
 		return False
 
 @login_required(login_url=settings.LOGIN_URL)

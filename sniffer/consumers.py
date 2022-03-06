@@ -136,7 +136,6 @@ class SniffConsumer(WebsocketConsumer):
         # eğer bir önceki filtre ile aynı filtre uygulanacaksa pas geçilir
         if filter_string.strip() == self.filter:
             # TODO: Pas geçme işlemi kullanıcıya bildirilmeli
-            print("Aynı filtre. Pas geçiliyor: ",filter_string)
             return
 
         if self.check_filter(filter_string):
