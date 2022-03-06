@@ -7,7 +7,7 @@ from django.conf.urls import url
 application = ProtocolTypeRouter({
     'websocket': AuthMiddlewareStack(
         URLRouter([
-            url(r"^sniffer/$",consumers.SniffConsumer),
+            url(r"^sniffer/$",consumers.SniffConsumer.as_asgi()),
         ])
     ),
 })
